@@ -4,7 +4,7 @@ import pandas as pd
 import time
 import os
 opt = ChromiumOptions()
-opt.set_headless()
+opt.headless()
 website = ChromiumPage(opt)
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
