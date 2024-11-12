@@ -3,8 +3,9 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import time
 import os
-
-website = ChromiumPage()
+opt = ChromiumOptions()
+opt.set_headless()
+website = ChromiumPage(opt)
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
 
