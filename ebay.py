@@ -31,7 +31,6 @@ async def process_page(page, link, all_data, mistakes):
     try:
         await page.goto(link, timeout=30000)
         await check_captcha(page)
-        time.sleep(0.3)
         # Загружаем HTML и парсим его с помощью BeautifulSoup
         html = await page.content()
         bs = BeautifulSoup(html, 'lxml')
@@ -55,6 +54,24 @@ async def process_page(page, link, all_data, mistakes):
             print(f"Проблема с кодом производителя, добавляем в ошибки.")
             mistakes.append(link)
             return
+        cat = bs.findAll(class_="seo-breadcrumbs-container viexpsvc")
+        cats_code = []
+        cats_name = []
+        for i in range(len(cat)):
+            taga = cat[i].findAll("a")
+            codes = []
+            names = []
+            for tag in taga:
+                splited = tag["href"].split("/")
+                try:
+                    if splited[5] not in codes and splited[4] not in names:
+                        codes.append(splited[5])
+                        names.append(splited[4])
+                except Exception as e:
+                    print(f"Error processing {splited}: {e}")
+            # Объединяем коды и имена в строки
+            cats_code.append(" / ".join(codes))
+            cats_name.append(" / ".join(names))
 
         # Переход по каждой странице пагинации
         for tme in range(times):
@@ -72,6 +89,8 @@ async def process_page(page, link, all_data, mistakes):
                 if not all_data and headers:
                     all_data.update({header: [] for header in headers})
                     all_data["ManufacturerPartCode"] = []
+                    all_data["CategoryName"] = []
+                    all_data["CategoryCode"] = []
 
                 # Извлекаем данные из строк таблицы
                 for row in table.find_all('tr'):
@@ -91,6 +110,8 @@ async def process_page(page, link, all_data, mistakes):
                                 all_data[col_name] = []
                             all_data[col_name].append(cell.text.strip())
                     all_data["ManufacturerPartCode"].append(code)
+                    all_data["CategoryCode"].append(cats_code)
+                    all_data["CategoryName"].append(cats_name)
 
             # Сохраняем данные после обработки каждой страницы
             save_to_csv(all_data)
@@ -100,6 +121,9 @@ async def process_page(page, link, all_data, mistakes):
                     await page.wait_for_selector(".pagination__next.icon-btn", timeout=10000)
                     next_button = await page.query_selector(".pagination__next.icon-btn")
                     await next_button.click(force=True)
+                    # Ожидаем, пока элемент станет видимым
+                    await page.wait_for_selector('.motors-compatibility-table', state='visible', timeout=10000)
+
                     
             except Exception as e:
                 print(e)
@@ -128,7 +152,7 @@ async def process_links_in_tab(page, links, all_data, mistakes):
 # Основная асинхронная функция
 async def main():
     links_file = os.path.join(current_dir, "Adylbek_urls.csv")
-    links = list(pd.read_csv(links_file)["urls"])
+    links = list(pd.read_csv(links_file)["urls"])[:30]
     value_to_remove = links[0]
     while value_to_remove in links:
         links.remove(value_to_remove)
