@@ -20,11 +20,18 @@ async def check_captcha(page):
             break
 
 # Функция для сохранения данных в CSV
-def save_to_csv(all_data):
+def save_to_csv(all_data, mistakes):
+    # Сохраняем основные данные
     file_path = os.path.join(current_dir, "result.csv")
     df = pd.DataFrame(all_data)
     df.to_csv(file_path, index=False)
     print(f"Данные сохранены в {file_path}")
+    
+    # Сохраняем ошибки
+    if mistakes:
+        mistakes_file = os.path.join(current_dir, "mistakes.csv")
+        mistakes_df = pd.DataFrame({"mistakes": mistakes})
+        mistakes_df.to_csv(mistakes_file, index=False)
 
 # Функция для обработки одной ссылки
 async def process_page(page, link, all_data, mistakes):
@@ -114,7 +121,7 @@ async def process_page(page, link, all_data, mistakes):
                     all_data["CategoryName"].append(cats_name)
 
             # Сохраняем данные после обработки каждой страницы
-            save_to_csv(all_data)
+            save_to_csv(all_data, mistakes)
 
             try:
                 if tme != times-1:
@@ -172,15 +179,8 @@ async def main():
 
         await browser.close()
 
-    # Сохраняем данные
-    result_file = os.path.join(current_dir, "result.csv")
-    pd.DataFrame(all_data).to_csv(result_file, index=False)
-
-    # Сохраняем ошибки
-    if mistakes:
-        mistakes_file = os.path.join(current_dir, "mistakes.csv")
-        pd.DataFrame({"mistakes": mistakes}).to_csv(mistakes_file, index=False)
-        print(f"Ошибки сохранены в {mistakes_file}")
+    # Сохраняем данные и ошибки
+    save_to_csv(all_data, mistakes)
 
 # Запуск кода
 if __name__ == "__main__":
