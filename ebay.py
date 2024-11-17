@@ -159,7 +159,7 @@ async def process_links_in_tab(page, links, all_data, mistakes):
 # Основная асинхронная функция
 async def main():
     links_file = os.path.join(current_dir, "Adylbek_urls.csv")
-    links = list(pd.read_csv(links_file)["urls"])[:30]
+    links = list(pd.read_csv(links_file)["urls"])
     value_to_remove = links[0]
     while value_to_remove in links:
         links.remove(value_to_remove)
