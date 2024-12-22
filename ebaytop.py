@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import time
 import os
-
+opt = ChromiumOptions().headless()
 website = ChromiumPage()
 
 current_dir = os.path.dirname(os.path.realpath(__file__))
@@ -13,7 +13,7 @@ def check_captcha():
     if soup.find("div", class_="target-icaptcha-slot") or soup.find("div", class_="g-recaptcha"):
         time.sleep(30)
 
-links_file = os.path.join(current_dir, "Adylbek_urls.csv")
+links_file = os.path.join(current_dir, "urls.csv")
 links = list(pd.read_csv(links_file)["urls"])
 value_to_remove = links[0]
 all_data = []
@@ -24,7 +24,7 @@ while value_to_remove in links:
 mistakes = []
 
 for i in links:
-    website.get(i)
+    website.get(i,timeout=0.1)
     check_captcha()
 
     bs = BeautifulSoup(website.html, 'lxml')

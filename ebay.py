@@ -124,18 +124,20 @@ async def process_page(page, link, all_data, mistakes):
             save_to_csv(all_data, mistakes)
 
             try:
-                if tme != times-1:
+                if tme != times - 1:
                     await page.wait_for_selector(".pagination__next.icon-btn", timeout=10000)
                     next_button = await page.query_selector(".pagination__next.icon-btn")
                     await next_button.click(force=True)
-                    # Ожидаем, пока элемент станет видимым
+                    # Ожидаем, пока таблица станет видимой
                     await page.wait_for_selector('.motors-compatibility-table', state='visible', timeout=10000)
-
-                    
-            except Exception as e:
-                print(e)
+            except asyncio.TimeoutError:
+                print(f"Тайм-аут при ожидании кнопки 'Next' для ссылки: {link}")
+                mistakes.append(link)  # Добавляем текущую ссылку в ошибки
                 break
-
+            except Exception as e:
+                print(f"Неожиданная ошибка: {e}")
+                mistakes.append(link)
+                break
 
     except Exception as e:
         mistakes.append(link)
